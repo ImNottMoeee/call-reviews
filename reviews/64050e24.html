@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moe — Call Review</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; line-height: 1.6; }
+  .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+
+  /* Header */
+  .header { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; text-align: center; }
+  .grade-badge { font-size: 4rem; font-weight: 700; color: #5865F2; line-height: 1; }
+  .rep-name { font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0; }
+  .meta-row { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+  .meta-pill { background: #2a2a2a; border-radius: 20px; padding: 4px 14px; font-size: 13px; color: #aaa; }
+  .summary { color: #bbb; font-style: italic; margin-top: 1rem; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1rem; text-align: center; }
+  .stat-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-val { font-size: 1.4rem; font-weight: 600; color: #5865F2; }
+
+  /* Section */
+  .section { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .section-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 1rem; }
+
+  /* Verdict */
+  .verdict { color: #ddd; font-size: 15px; line-height: 1.7; border-left: 3px solid #5865F2; padding-left: 1rem; }
+
+  /* Wins */
+  .win-card { margin-bottom: 1rem; padding: 1rem; background: #111; border-radius: 10px; border-left: 3px solid #23A55A; }
+  .win-title { font-weight: 600; margin-bottom: 6px; }
+  .win-quote { color: #aaa; font-style: italic; margin-bottom: 6px; font-size: 14px; }
+  .win-why { color: #888; font-size: 13px; }
+  .timestamp { background: #2a2a2a; border-radius: 4px; padding: 1px 6px; font-size: 11px; color: #888; margin-left: 6px; }
+
+  /* Improvements */
+  .imp-card { display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #111; border-radius: 10px; border-left: 3px solid #ED4245; }
+  .imp-num { font-size: 1.5rem; font-weight: 700; color: #ED4245; min-width: 30px; }
+  .imp-problem { font-weight: 600; margin-bottom: 6px; }
+  .imp-impact { color: #aaa; font-size: 13px; margin-bottom: 8px; }
+  .imp-fix { color: #bbb; font-size: 14px; }
+  .imp-fix em { color: #7EB8F7; }
+
+  /* Missed */
+  .missed-item { padding: 8px 12px; background: #111; border-radius: 8px; margin-bottom: 6px; font-size: 14px; color: #bbb; }
+
+  /* Drill */
+  .drill-skill { font-size: 1.1rem; font-weight: 600; color: #5865F2; margin-bottom: 8px; }
+  .drill-why { color: #bbb; font-size: 14px; margin-bottom: 6px; }
+  .drill-exercise { color: #aaa; font-size: 14px; }
+
+  /* Momentum */
+  .momentum-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+  .momentum-item { background: #111; border-radius: 10px; padding: 1rem; }
+  .momentum-phase { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .momentum-energy { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .momentum-note { font-size: 13px; color: #888; }
+
+  /* Scores */
+  .score-row { padding: 10px 0; border-bottom: 1px solid #222; cursor: pointer; }
+  .score-row:last-child { border-bottom: none; }
+  .score-left { display: flex; align-items: center; gap: 10px; }
+  .score-name { font-size: 14px; }
+  .score-val { float: right; color: #666; font-size: 13px; }
+  .score-note { display: none; font-size: 13px; color: #777; margin-top: 6px; padding-left: 4px; }
+  .score-row.expanded .score-note { display: block; }
+  .score-row:hover { background: #222; border-radius: 6px; padding-left: 8px; }
+
+  /* Context */
+  .context-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .context-item { background: #111; border-radius: 10px; padding: 1rem; }
+  .context-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .context-val { font-size: 14px; color: #ddd; }
+
+  /* Footer */
+  .footer { text-align: center; color: #444; font-size: 12px; margin-top: 2rem; }
+
+  @media (max-width: 600px) {
+    .context-grid { grid-template-columns: 1fr; }
+    .imp-card { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="grade-badge">B-</div>
+    <div class="rep-name">Moe</div>
+    <div class="meta-row">
+      <span class="meta-pill">B2B</span>
+      <span class="meta-pill">Setter</span>
+      <span class="meta-pill">Booked</span>
+      <span class="meta-pill">3.2/5 overall</span>
+    </div>
+    <div class="summary">The rep booked a meeting with a potential client who is looking to start a hijab brand, and they discussed the client's goals and vision for the business. The rep provided some valuable insights and examples, but could have done more to create a sense of urgency and handle potential objections.</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Talk ratio</div>
+      <div class="stat-val">60%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Listen ratio</div>
+      <div class="stat-val">40%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Show risk</div>
+      <div class="stat-val">Medium</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Close likelihood</div>
+      <div class="stat-val">Medium</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🧠 Verdict</div>
+    <div class="verdict">This rep demonstrated a good understanding of the lead's business and goals, but struggled with creating a sense of urgency and handling objections. With some refinement in these areas, they could significantly improve their results.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">✅ Wins</div>
+    
+            <div class="win-card">
+                <div class="win-title">✅ Built rapport with the lead </div>
+                <div class="win-quote">"So I think you've been thinking about your brand for like making this hijab brand. Honestly, like in active really a really long time just because for me, I have, I'm like a creative person and I really like fashion."</div>
+                <div class="win-why">↳ The rep showed genuine interest in the lead's business and goals.</div>
+            </div>
+            <div class="win-card">
+                <div class="win-title">✅ Understood the lead's pain points </div>
+                <div class="win-quote">"I haven't seen, I have not seen very many North American companies invest in really unique prints, things that follow different aesthetics or different collections."</div>
+                <div class="win-why">↳ The rep demonstrated a good understanding of the lead's business and challenges.</div>
+            </div>
+            <div class="win-card">
+                <div class="win-title">✅ Booked a meeting </div>
+                <div class="win-quote">"Gotcha. I mean definitely me you being on this call is the first step. How can you get to that level that you envision with your hijab."</div>
+                <div class="win-why">↳ The rep effectively booked a meeting with the lead.</div>
+            </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📝 Improvements</div>
+    
+            <div class="imp-card">
+                <div class="imp-num">1</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Lack of urgency creation</div>
+                    <div class="imp-impact">💥 Impact: The lead may not take action now and may lose interest in the opportunity.</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"The rep could say something like, 'If we don't take action now, the lead may miss out on a valuable opportunity to grow their business.'"</em></div>
+                </div>
+            </div>
+            <div class="imp-card">
+                <div class="imp-num">2</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Poor objection handling</div>
+                    <div class="imp-impact">💥 Impact: The lead may not be convinced of the value proposition and may not take action.</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"The rep could say something like, 'I understand that you may have concerns about the cost, but our solution has been proven to deliver significant returns on investment.'"</em></div>
+                </div>
+            </div>
+            <div class="imp-card">
+                <div class="imp-num">3</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Unclear value proposition</div>
+                    <div class="imp-impact">💥 Impact: The lead may not understand the value of the solution and may not take action.</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"The rep could say something like, 'Our solution will help you increase sales and revenue by providing a unique and innovative product that meets the needs of your target market.'"</em></div>
+                </div>
+            </div>
+  </div>
+
+  <div class='section'><div class='section-title'>💡 Missed Opportunities</div><div class="missed-item">💡 The rep could have asked more questions to qualify the lead further.</div><div class="missed-item">💡 The rep could have provided more specific examples and case studies to demonstrate the value proposition.</div></div>
+
+  <div class="section">
+    <div class="section-title">🎯 Drill This Week</div>
+    
+        <div class="drill-skill">🎯 Urgency creation</div>
+        <div class="drill-why"><strong>Why now:</strong> Creating a sense of urgency is critical to driving action and closing deals.</div>
+        <div class="drill-exercise"><strong>Exercise:</strong> Practice creating a sense of urgency by using phrases such as 'If we don't take action now, we may miss out on a valuable opportunity' or 'The sooner we take action, the sooner we can start seeing results.'</div>
+  </div>
+
+  <div class='section'><div class='section-title'>📈 Momentum Map</div><div class='momentum-grid'>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#FAA61A">● Introduction</div>
+                <div class="momentum-energy" style="color:#FAA61A">Medium</div>
+                <div class="momentum-note">The rep introduced themselves and started the call, but didn't grab the lead's attention immediately.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#23A55A">● Rapport building</div>
+                <div class="momentum-energy" style="color:#23A55A">High</div>
+                <div class="momentum-note">The rep built some rapport with the lead and established a connection.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#FAA61A">● Pain point excavation</div>
+                <div class="momentum-energy" style="color:#FAA61A">Medium</div>
+                <div class="momentum-note">The rep understood the lead's pain points, but didn't create a sense of urgency.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#23A55A">● Booking execution</div>
+                <div class="momentum-energy" style="color:#23A55A">High</div>
+                <div class="momentum-note">The rep effectively booked a meeting with the lead.</div>
+            </div></div></div>
+
+  <div class="section">
+    <div class="section-title">📊 Full Scorecard <small style="color:#555;font-size:11px">(click to expand)</small></div>
+    
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">Opening & pattern interrupt</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep started with a generic greeting and didn't grab the lead's attention immediately.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Rapport & trust building</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep built some rapport with the lead, but could have done more to establish trust and credibility.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">Permission & control</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep didn't clearly establish control of the call and allowed the lead to dominate the conversation.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Pain point excavation</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep did a good job of understanding the lead's pain points and goals.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Decision maker qualification</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep confirmed that the lead is the decision-maker, but could have asked more questions to qualify them further.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">Value proposition</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep didn't clearly articulate the value proposition and how it addresses the lead's pain points.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">Objection handling</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep didn't handle potential objections effectively and didn't provide clear responses to the lead's concerns.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢⚫⚫⚫⚫</span></span>
+                <span class="score-name">Urgency creation</span>
+            </div>
+            <span class="score-val">1/5</span>
+            <div class="score-note">The rep didn't create a sense of urgency and didn't provide a clear reason for the lead to take action now.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Booking execution</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep effectively booked a meeting with the lead.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Handoff quality</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep provided some context for the next steps, but could have done more to ensure a smooth handoff.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Call pacing & tonality</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep's tone was generally good, but the call pacing was a bit slow at times.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Language & professionalism</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep used professional language throughout the call.</div>
+        </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📋 Context</div>
+    <div class="context-grid">
+      <div class="context-item">
+        <div class="context-label">Call trajectory</div>
+        <div class="context-val">The call started slowly, but picked up momentum as the rep built rapport with the lead and understood their pain points.</div>
+      </div>
+      <div class="context-item">
+        <div class="context-label">Lead difficulty</div>
+        <div class="context-val">Medium</div>
+      </div>
+    </div>
+    <div style='margin-top:1rem;color:#888;font-size:14px'>The lead was somewhat resistant to the idea of taking action, but was open to discussing their business and goals. The rep could have done more to create a sense of urgency and handle potential objections.</div>
+  </div>
+
+  <div class="footer">Generated May 21, 2026 at 04:23 AM · Sales Call Reviewer</div>
+
+</div>
+</body>
+</html>
