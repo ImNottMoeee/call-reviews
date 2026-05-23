@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>arion — Call Review</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; line-height: 1.6; }
+  .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+
+  /* Header */
+  .header { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; text-align: center; }
+  .grade-badge { font-size: 4rem; font-weight: 700; color: #FAA61A; line-height: 1; }
+  .rep-name { font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0; }
+  .meta-row { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+  .meta-pill { background: #2a2a2a; border-radius: 20px; padding: 4px 14px; font-size: 13px; color: #aaa; }
+  .summary { color: #bbb; font-style: italic; margin-top: 1rem; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1rem; text-align: center; }
+  .stat-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-val { font-size: 1.4rem; font-weight: 600; color: #FAA61A; }
+
+  /* Section */
+  .section { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .section-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 1rem; }
+
+  /* Verdict */
+  .verdict { color: #ddd; font-size: 15px; line-height: 1.7; border-left: 3px solid #FAA61A; padding-left: 1rem; }
+
+  /* Wins */
+  .win-card { margin-bottom: 1rem; padding: 1rem; background: #111; border-radius: 10px; border-left: 3px solid #23A55A; }
+  .win-title { font-weight: 600; margin-bottom: 6px; }
+  .win-quote { color: #aaa; font-style: italic; margin-bottom: 6px; font-size: 14px; }
+  .win-why { color: #888; font-size: 13px; }
+  .timestamp { background: #2a2a2a; border-radius: 4px; padding: 1px 6px; font-size: 11px; color: #888; margin-left: 6px; }
+
+  /* Improvements */
+  .imp-card { display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #111; border-radius: 10px; border-left: 3px solid #ED4245; }
+  .imp-num { font-size: 1.5rem; font-weight: 700; color: #ED4245; min-width: 30px; }
+  .imp-problem { font-weight: 600; margin-bottom: 6px; }
+  .imp-impact { color: #aaa; font-size: 13px; margin-bottom: 8px; }
+  .imp-fix { color: #bbb; font-size: 14px; }
+  .imp-fix em { color: #7EB8F7; }
+
+  /* Missed */
+  .missed-item { padding: 8px 12px; background: #111; border-radius: 8px; margin-bottom: 6px; font-size: 14px; color: #bbb; }
+
+  /* Drill */
+  .drill-skill { font-size: 1.1rem; font-weight: 600; color: #FAA61A; margin-bottom: 8px; }
+  .drill-why { color: #bbb; font-size: 14px; margin-bottom: 6px; }
+  .drill-exercise { color: #aaa; font-size: 14px; }
+
+  /* Momentum */
+  .momentum-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+  .momentum-item { background: #111; border-radius: 10px; padding: 1rem; }
+  .momentum-phase { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .momentum-energy { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .momentum-note { font-size: 13px; color: #888; }
+
+  /* Scores */
+  .score-row { padding: 10px 0; border-bottom: 1px solid #222; cursor: pointer; }
+  .score-row:last-child { border-bottom: none; }
+  .score-left { display: flex; align-items: center; gap: 10px; }
+  .score-name { font-size: 14px; }
+  .score-val { float: right; color: #666; font-size: 13px; }
+  .score-note { display: none; font-size: 13px; color: #777; margin-top: 6px; padding-left: 4px; }
+  .score-row.expanded .score-note { display: block; }
+  .score-row:hover { background: #222; border-radius: 6px; padding-left: 8px; }
+
+  /* Context */
+  .context-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .context-item { background: #111; border-radius: 10px; padding: 1rem; }
+  .context-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .context-val { font-size: 14px; color: #ddd; }
+
+  /* Footer */
+  .footer { text-align: center; color: #444; font-size: 12px; margin-top: 2rem; }
+
+  @media (max-width: 600px) {
+    .context-grid { grid-template-columns: 1fr; }
+    .imp-card { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="grade-badge">C</div>
+    <div class="rep-name">arion</div>
+    <div class="meta-row">
+      <span class="meta-pill">B2C</span>
+      <span class="meta-pill">Setter</span>
+      <span class="meta-pill">Not Qualified</span>
+      <span class="meta-pill">2.5/5 overall</span>
+    </div>
+    <div class="summary">The rep called Jaime to discuss his interest in working with Mike to become a profitable trader. Jaime shared his goals and motivations, but it was revealed that he lacked the necessary capital to invest in the program. The rep sent Jaime a free video to help him understand the program, but ultimately screened him out due to insufficient funds.</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Talk ratio</div>
+      <div class="stat-val">60%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Listen ratio</div>
+      <div class="stat-val">40%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Show risk</div>
+      <div class="stat-val">Low</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Close likelihood</div>
+      <div class="stat-val">Low</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🧠 Verdict</div>
+    <div class="verdict">This call was average, with the rep doing a decent job of building rapport and understanding the prospect's goals, but struggling with financial qualification and objection handling. The rep failed to effectively address the prospect's lack of capital, which ultimately led to the lead being screened out.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">✅ Wins</div>
+    
+            <div class="win-card">
+                <div class="win-title">✅ Establishing rapport <span class="timestamp">[01:15]</span></div>
+                <div class="win-quote">"Awesome, bro. So just so I have an idea and just just walk me through like what really got you interested in, you know, wanting to work with Mike."</div>
+                <div class="win-why">↳ The rep built a decent rapport with Jaime, making him feel comfortable sharing his goals and motivations.</div>
+            </div>
+            <div class="win-card">
+                <div class="win-title">✅ Confirming intent <span class="timestamp">[00:30]</span></div>
+                <div class="win-quote">"I just thought you filled out an application to work with Mike and become profitable traders, is that right?"</div>
+                <div class="win-why">↳ The rep effectively confirmed Jaime's interest in working with Mike.</div>
+            </div>
+            <div class="win-card">
+                <div class="win-title">✅ Understanding goals <span class="timestamp">[10:45]</span></div>
+                <div class="win-quote">"So you want to keep your jobs for now to have actually be able to fund obviously trading, but eventually, yeah, definitely wanted."</div>
+                <div class="win-why">↳ The rep did a decent job of understanding Jaime's goals and motivations.</div>
+            </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📝 Improvements</div>
+    
+            <div class="imp-card">
+                <div class="imp-num">1</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Generic opener</div>
+                    <div class="imp-impact">💥 Impact: Failed to grab Jaime's attention</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"Use a pattern interrupt opener, such as 'Hey Jaime, I noticed you filled out an application to work with Mike, what sparked your interest?'"</em></div>
+                </div>
+            </div>
+            <div class="imp-card">
+                <div class="imp-num">2</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Ineffective financial qualification</div>
+                    <div class="imp-impact">💥 Impact: Failed to effectively qualify Jaime's financial situation</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"Ask more specific questions, such as 'What's your current income and how much can you afford to invest in the program?'"</em></div>
+                </div>
+            </div>
+            <div class="imp-card">
+                <div class="imp-num">3</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Poor objection handling</div>
+                    <div class="imp-impact">💥 Impact: Failed to provide a clear solution</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"Use a bridging statement, such as 'I understand you're concerned about the cost, but let me ask you, what's the cost of not achieving your goals?'"</em></div>
+                </div>
+            </div>
+  </div>
+
+  <div class='section'><div class='section-title'>💡 Missed Opportunities</div><div class="missed-item">💡 The rep could have asked more specific questions about Jaime's financial situation.</div><div class="missed-item">💡 The rep could have provided a clearer solution to Jaime's objections.</div></div>
+
+  <div class="section">
+    <div class="section-title">🎯 Drill This Week</div>
+    
+        <div class="drill-skill">🎯 Financial qualification</div>
+        <div class="drill-why"><strong>Why now:</strong> The rep struggled to effectively qualify Jaime's financial situation, which ultimately led to the lead being screened out.</div>
+        <div class="drill-exercise"><strong>Exercise:</strong> Practice asking specific questions about a prospect's financial situation, such as 'What's your current income and how much can you afford to invest in the program?'</div>
+  </div>
+
+  <div class='section'><div class='section-title'>📈 Momentum Map</div><div class='momentum-grid'>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#FAA61A">● Opening</div>
+                <div class="momentum-energy" style="color:#FAA61A">Medium</div>
+                <div class="momentum-note">The rep built a decent rapport with Jaime, but the conversation was slow to start.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#23A55A">● Discovery</div>
+                <div class="momentum-energy" style="color:#23A55A">High</div>
+                <div class="momentum-note">The rep effectively understood Jaime's goals and motivations, and the conversation was engaging.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#ED4245">● Financial qualification</div>
+                <div class="momentum-energy" style="color:#ED4245">Low</div>
+                <div class="momentum-note">The rep struggled to effectively qualify Jaime's financial situation, and the conversation became slow and awkward.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#ED4245">● Closing</div>
+                <div class="momentum-energy" style="color:#ED4245">Low</div>
+                <div class="momentum-note">The rep ultimately screened out the lead due to insufficient funds, and the conversation ended on a low note.</div>
+            </div></div></div>
+
+  <div class="section">
+    <div class="section-title">📊 Full Scorecard <small style="color:#555;font-size:11px">(click to expand)</small></div>
+    
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Rapport and human tone</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep built a decent rapport with Jaime, but could have done more to establish a stronger connection.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">Pattern interrupt opener</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep's opener was generic and didn't grab Jaime's attention.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Intent confirmation</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep effectively confirmed Jaime's interest in working with Mike.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Goal & dream discovery</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep did a decent job of understanding Jaime's goals, but could have dug deeper.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">Pain & frustration discovery</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep didn't effectively surface Jaime's pain points and frustrations.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">Vision / future-pacing</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep didn't paint a vivid picture of Jaime's future with the program.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢⚫⚫⚫⚫</span></span>
+                <span class="score-name">Financial qualification</span>
+            </div>
+            <span class="score-val">1/5</span>
+            <div class="score-note">The rep struggled to effectively qualify Jaime's financial situation.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Decision maker check</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep confirmed that Jaime was the decision-maker, but could have done more to establish his authority.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">Objection handling</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep didn't handle Jaime's objections smoothly and didn't provide a clear solution.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢⚫⚫⚫</span></span>
+                <span class="score-name">The ask</span>
+            </div>
+            <span class="score-val">2/5</span>
+            <div class="score-note">The rep didn't confidently and directly ask for the booking.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">➖➖➖➖➖</span></span>
+                <span class="score-name">Booking execution</span>
+            </div>
+            <span class="score-val">N/A</span>
+            <div class="score-note"></div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">➖➖➖➖➖</span></span>
+                <span class="score-name">Show-up framing</span>
+            </div>
+            <span class="score-val">N/A</span>
+            <div class="score-note"></div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Call pacing & energy</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep matched Jaime's energy, but could have done more to lead the conversation.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Concealment quality</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep effectively avoided revealing the price and pitch before the strategy call.</div>
+        </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📋 Context</div>
+    <div class="context-grid">
+      <div class="context-item">
+        <div class="context-label">Call trajectory</div>
+        <div class="context-val">The call started slowly, built momentum during the discovery phase, but ultimately ended on a low note due to financial qualification issues.</div>
+      </div>
+      <div class="context-item">
+        <div class="context-label">Lead difficulty</div>
+        <div class="context-val">Medium</div>
+      </div>
+    </div>
+    <div style='margin-top:1rem;color:#888;font-size:14px'>Jaime was a relatively warm lead, having filled out an application to work with Mike, but he lacked the necessary capital to invest in the program. The rep struggled to effectively qualify his financial situation, which ultimately led to the lead being screened out.</div>
+  </div>
+
+  <div class="footer">Generated May 23, 2026 at 03:56 AM · Sales Call Reviewer</div>
+
+</div>
+</body>
+</html>
