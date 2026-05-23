@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>arion — Call Review</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; line-height: 1.6; }
+  .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+
+  /* Header */
+  .header { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem; text-align: center; }
+  .grade-badge { font-size: 4rem; font-weight: 700; color: #5865F2; line-height: 1; }
+  .rep-name { font-size: 1.5rem; font-weight: 600; margin: 0.5rem 0; }
+  .meta-row { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+  .meta-pill { background: #2a2a2a; border-radius: 20px; padding: 4px 14px; font-size: 13px; color: #aaa; }
+  .summary { color: #bbb; font-style: italic; margin-top: 1rem; }
+
+  /* Stats row */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 1rem; text-align: center; }
+  .stat-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-val { font-size: 1.4rem; font-weight: 600; color: #5865F2; }
+
+  /* Section */
+  .section { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .section-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 1rem; }
+
+  /* Verdict */
+  .verdict { color: #ddd; font-size: 15px; line-height: 1.7; border-left: 3px solid #5865F2; padding-left: 1rem; }
+
+  /* Wins */
+  .win-card { margin-bottom: 1rem; padding: 1rem; background: #111; border-radius: 10px; border-left: 3px solid #23A55A; }
+  .win-title { font-weight: 600; margin-bottom: 6px; }
+  .win-quote { color: #aaa; font-style: italic; margin-bottom: 6px; font-size: 14px; }
+  .win-why { color: #888; font-size: 13px; }
+  .timestamp { background: #2a2a2a; border-radius: 4px; padding: 1px 6px; font-size: 11px; color: #888; margin-left: 6px; }
+
+  /* Improvements */
+  .imp-card { display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; background: #111; border-radius: 10px; border-left: 3px solid #ED4245; }
+  .imp-num { font-size: 1.5rem; font-weight: 700; color: #ED4245; min-width: 30px; }
+  .imp-problem { font-weight: 600; margin-bottom: 6px; }
+  .imp-impact { color: #aaa; font-size: 13px; margin-bottom: 8px; }
+  .imp-fix { color: #bbb; font-size: 14px; }
+  .imp-fix em { color: #7EB8F7; }
+
+  /* Missed */
+  .missed-item { padding: 8px 12px; background: #111; border-radius: 8px; margin-bottom: 6px; font-size: 14px; color: #bbb; }
+
+  /* Drill */
+  .drill-skill { font-size: 1.1rem; font-weight: 600; color: #5865F2; margin-bottom: 8px; }
+  .drill-why { color: #bbb; font-size: 14px; margin-bottom: 6px; }
+  .drill-exercise { color: #aaa; font-size: 14px; }
+
+  /* Momentum */
+  .momentum-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+  .momentum-item { background: #111; border-radius: 10px; padding: 1rem; }
+  .momentum-phase { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .momentum-energy { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .momentum-note { font-size: 13px; color: #888; }
+
+  /* Scores */
+  .score-row { padding: 10px 0; border-bottom: 1px solid #222; cursor: pointer; }
+  .score-row:last-child { border-bottom: none; }
+  .score-left { display: flex; align-items: center; gap: 10px; }
+  .score-name { font-size: 14px; }
+  .score-val { float: right; color: #666; font-size: 13px; }
+  .score-note { display: none; font-size: 13px; color: #777; margin-top: 6px; padding-left: 4px; }
+  .score-row.expanded .score-note { display: block; }
+  .score-row:hover { background: #222; border-radius: 6px; padding-left: 8px; }
+
+  /* Context */
+  .context-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .context-item { background: #111; border-radius: 10px; padding: 1rem; }
+  .context-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .context-val { font-size: 14px; color: #ddd; }
+
+  /* Footer */
+  .footer { text-align: center; color: #444; font-size: 12px; margin-top: 2rem; }
+
+  @media (max-width: 600px) {
+    .context-grid { grid-template-columns: 1fr; }
+    .imp-card { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="grade-badge">B-</div>
+    <div class="rep-name">arion</div>
+    <div class="meta-row">
+      <span class="meta-pill">B2C</span>
+      <span class="meta-pill">Setter</span>
+      <span class="meta-pill">Booked</span>
+      <span class="meta-pill">3.5/5 overall</span>
+    </div>
+    <div class="summary">The rep successfully booked a meeting with the prospect, Ahmed, who is a complete beginner in trading and wants to make $5,000 to $10,000 per month. The rep did a good job of uncovering Ahmed's goals and motivations, but could have done more to create a vivid picture of his future and handle potential objections.</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Talk ratio</div>
+      <div class="stat-val">60%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Listen ratio</div>
+      <div class="stat-val">40%</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Show risk</div>
+      <div class="stat-val">Medium</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Close likelihood</div>
+      <div class="stat-val">Medium</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🧠 Verdict</div>
+    <div class="verdict">This rep demonstrated a good understanding of the sales process, but there were moments where they could have dug deeper to uncover more emotional pain and vision for the prospect's future. The call was generally well-structured, but there were some areas where the rep could have improved their questioning and handling of objections.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">✅ Wins</div>
+    
+            <div class="win-card">
+                <div class="win-title">✅ Establishing rapport <span class="timestamp">[00:00]</span></div>
+                <div class="win-quote">"Yes, Ahmed. Yes, Ahmed. Oh, it's a good Ahmed. My name is Arian from Mike's trading team."</div>
+                <div class="win-why">↳ The rep established a good rapport with Ahmed from the start.</div>
+            </div>
+            <div class="win-card">
+                <div class="win-title">✅ Uncovering goals and motivations <span class="timestamp">[05:30]</span></div>
+                <div class="win-quote">"And what's your goal with trading overall? Do you want to replace your job kind of or is it like a side type of thing?"</div>
+                <div class="win-why">↳ The rep uncovered Ahmed's goals and motivations, which was important for understanding his needs.</div>
+            </div>
+            <div class="win-card">
+                <div class="win-title">✅ Booking the meeting <span class="timestamp">[25:00]</span></div>
+                <div class="win-quote">"So I just booked your meeting for 2:30 and I mean, I'll see you there, bro."</div>
+                <div class="win-why">↳ The rep booked the meeting smoothly and efficiently, which was excellent.</div>
+            </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📝 Improvements</div>
+    
+            <div class="imp-card">
+                <div class="imp-num">1</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Not digging deep enough on emotional pain</div>
+                    <div class="imp-impact">💥 Impact: The rep missed an opportunity to understand Ahmed's emotional drivers and create a more compelling vision for his future.</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"Ask more open-ended questions to uncover Ahmed's emotional pain points, such as 'What's been the most frustrating part of your current job?' or 'How do you think your life would change if you were making $10,000 per month?'"</em></div>
+                </div>
+            </div>
+            <div class="imp-card">
+                <div class="imp-num">2</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Not handling potential objections</div>
+                    <div class="imp-impact">💥 Impact: The rep did not encounter any significant objections, but could have been more prepared to handle potential concerns.</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"Anticipate potential objections and prepare responses in advance, such as 'I understand that investing in a trading education may seem like a risk, but our program has a proven track record of success.'"</em></div>
+                </div>
+            </div>
+            <div class="imp-card">
+                <div class="imp-num">3</div>
+                <div class="imp-content">
+                    <div class="imp-problem">❌ Not varying tone and pace</div>
+                    <div class="imp-impact">💥 Impact: The rep's tone and pace were generally consistent, but could have varied more to keep Ahmed engaged.</div>
+                    <div class="imp-fix">✏️ Say instead:<br><em>"Vary tone and pace to keep the conversation engaging, such as using a more energetic tone when discussing Ahmed's goals and a more empathetic tone when discussing his pain points."</em></div>
+                </div>
+            </div>
+  </div>
+
+  <div class='section'><div class='section-title'>💡 Missed Opportunities</div><div class="missed-item">💡 Not exploring Ahmed's current job and financial situation in more depth</div><div class="missed-item">💡 Not creating a more vivid and compelling vision for Ahmed's future</div></div>
+
+  <div class="section">
+    <div class="section-title">🎯 Drill This Week</div>
+    
+        <div class="drill-skill">🎯 Asking open-ended questions to uncover emotional pain points</div>
+        <div class="drill-why"><strong>Why now:</strong> This skill is important for understanding the prospect's emotional drivers and creating a more compelling vision for their future.</div>
+        <div class="drill-exercise"><strong>Exercise:</strong> Practice asking open-ended questions in role-plays, such as 'What's been the most frustrating part of your current job?' or 'How do you think your life would change if you were making $10,000 per month?'</div>
+  </div>
+
+  <div class='section'><div class='section-title'>📈 Momentum Map</div><div class='momentum-grid'>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#23A55A">● Introduction</div>
+                <div class="momentum-energy" style="color:#23A55A">High</div>
+                <div class="momentum-note">The rep established a good rapport with Ahmed from the start.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#FAA61A">● Goal discovery</div>
+                <div class="momentum-energy" style="color:#FAA61A">Medium</div>
+                <div class="momentum-note">The rep uncovered Ahmed's goals and motivations, but could have dug deeper to understand his emotional drivers.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#ED4245">● Pain point discovery</div>
+                <div class="momentum-energy" style="color:#ED4245">Low</div>
+                <div class="momentum-note">The rep did not fully explore Ahmed's pain points and frustrations with his current job and financial situation.</div>
+            </div>
+            <div class="momentum-item">
+                <div class="momentum-phase" style="color:#23A55A">● Booking the meeting</div>
+                <div class="momentum-energy" style="color:#23A55A">High</div>
+                <div class="momentum-note">The rep booked the meeting smoothly and efficiently, which was excellent.</div>
+            </div></div></div>
+
+  <div class="section">
+    <div class="section-title">📊 Full Scorecard <small style="color:#555;font-size:11px">(click to expand)</small></div>
+    
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Rapport and human tone</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep established a good rapport with Ahmed, but could have been more relatable and human in their tone.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Pattern interrupt opener</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The opener was not particularly creative or attention-grabbing, but it did the job.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Intent confirmation</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep confirmed Ahmed's intent to learn trading and make money, which was good.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Goal & dream discovery</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep uncovered Ahmed's goals and motivations, but could have dug deeper to understand his emotional drivers.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Pain & frustration discovery</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep did not fully explore Ahmed's pain points and frustrations with his current job and financial situation.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Vision / future-pacing</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep painted a limited picture of Ahmed's future and could have done more to create a vivid and compelling vision.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Financial qualification</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep qualified Ahmed's financial situation and budget, which was good.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Decision maker check</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep confirmed that Ahmed was the decision-maker, which was important.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢⚫⚫</span></span>
+                <span class="score-name">Objection handling</span>
+            </div>
+            <span class="score-val">3/5</span>
+            <div class="score-note">The rep did not encounter any significant objections, but could have been more prepared to handle potential concerns.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">The ask</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep asked for the booking confidently and directly, which was good.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢🟢</span></span>
+                <span class="score-name">Booking execution</span>
+            </div>
+            <span class="score-val">5/5</span>
+            <div class="score-note">The rep executed the booking smoothly and efficiently, which was excellent.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Show-up framing</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep framed the meeting as an opportunity for Ahmed to learn and grow, which was good.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Call pacing & energy</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep managed the call pacing and energy well, but could have varied their tone and pace more.</div>
+        </div>
+        <div class="score-row" onclick="this.classList.toggle('expanded')">
+            <div class="score-left">
+                <span class="score-dots"><span class="dots">🟢🟢🟢🟢⚫</span></span>
+                <span class="score-name">Concealment quality</span>
+            </div>
+            <span class="score-val">4/5</span>
+            <div class="score-note">The rep did a good job of concealing the price and pitch, which was important.</div>
+        </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📋 Context</div>
+    <div class="context-grid">
+      <div class="context-item">
+        <div class="context-label">Call trajectory</div>
+        <div class="context-val">The call trajectory was generally smooth, with some moments of low energy when discussing Ahmed's pain points.</div>
+      </div>
+      <div class="context-item">
+        <div class="context-label">Lead difficulty</div>
+        <div class="context-val">Medium</div>
+      </div>
+    </div>
+    <div style='margin-top:1rem;color:#888;font-size:14px'>Ahmed was a complete beginner in trading, but was motivated to learn and make money. He had some pain points and frustrations with his current job, but was not overly resistant to the idea of investing in a trading education.</div>
+  </div>
+
+  <div class="footer">Generated May 23, 2026 at 03:47 AM · Sales Call Reviewer</div>
+
+</div>
+</body>
+</html>
